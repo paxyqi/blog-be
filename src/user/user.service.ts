@@ -3,6 +3,7 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './interfaces/user.interface';
 import { CreateUserDTO } from './dto/create-user.dto';
+import { makeSalt, encryptPassword } from 'src/utils/cryptogram';
 
 @Injectable()
 export class UserService {
@@ -20,6 +21,9 @@ export class UserService {
   }
 
   async addUser(createUserDTO: CreateUserDTO): Promise<User> {
+    const salt = makeSalt(); //制作密码盐用于加密passwd
+    const hashPassword = encryptPassword(createUserDTO.password, salt);
+    createUserDTO.password = hashPassword;
     const newUser = await new this.userModel(createUserDTO);
     return newUser.save();
   }
