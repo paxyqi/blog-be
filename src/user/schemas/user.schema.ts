@@ -5,4 +5,5 @@ export const UserSchema = new mongoose.Schema({
   password: String,
   email: String,
   role: Number,
+  salt: String,
 });

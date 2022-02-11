@@ -10,14 +10,46 @@ import {
   Query,
   Put,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { ValidateObjectId } from '../pipes/validate-object-id.pipes';
+import { AuthService } from 'src/auth/auth.service';
+//添加用于验证用户token的守卫机制
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('user')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private authService: AuthService,
+  ) {}
+
+  // JWT验证 - Step 1: 用户请求登录
+  @Post('login')
+  async login(@Body() loginParmas: any) {
+    console.log('JWT验证 - Step 1: 用户请求登录');
+    const authResult = await this.authService.validateUser(
+      loginParmas.user_name,
+      loginParmas.password,
+    );
+    console.log(authResult);
+    switch (authResult.code) {
+      case 1:
+        return this.authService.certificate(authResult.user);
+      case 2:
+        return {
+          code: 600,
+          msg: `账号或密码不正确`,
+        };
+      default:
+        return {
+          code: 600,
+          msg: `查无此人`,
+        };
+    }
+  }
 
   @Get('users')
   async getUsers(@Res() res) {
@@ -34,6 +66,14 @@ export class UserController {
     return res.status(HttpStatus.OK).json(user);
   }
 
+  @Get('user/:user_name')
+  async getUserbyName(@Res() res, @Param() user_name) {
+    const user = await this.userService.getUserbyName(user_name);
+    if (!user) throw new NotFoundException('This user does not exist!');
+    return res.status(HttpStatus.OK).json(user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('/post')
   async addUser(@Res() res, @Body() createUserDTO: CreateUserDTO) {
     const newUser = await this.userService.addUser(createUserDTO);

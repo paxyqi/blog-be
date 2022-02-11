@@ -20,10 +20,16 @@ export class UserService {
     return post;
   }
 
+  async getUserbyName(user_name): Promise<User> {
+    const post = await this.userModel.findOne({ user_name: user_name });
+    return post;
+  }
+
   async addUser(createUserDTO: CreateUserDTO): Promise<User> {
     const salt = makeSalt(); //制作密码盐用于加密passwd
     const hashPassword = encryptPassword(createUserDTO.password, salt);
     createUserDTO.password = hashPassword;
+    createUserDTO.salt = salt;
     const newUser = await new this.userModel(createUserDTO);
     return newUser.save();
   }
