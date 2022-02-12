@@ -11,17 +11,20 @@ import {
   Put,
   Delete,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDTO } from './dto/create-user.dto';
+import { CreateUserDTO, LoginDTO } from './dto/create-user.dto';
 import { ValidateObjectId } from '../pipes/validate-object-id.pipes';
 import { AuthService } from 'src/auth/auth.service';
 //添加用于验证用户token的守卫机制
 import { AuthGuard } from '@nestjs/passport';
+import { RbacGuard } from 'src/guards/rbac.guard';
 //用于用户分级，只有高等级用户可以执行注销账号和编辑账号操作
-import { RbacInterceptor } from '../interceptor/rbac.interceptor';
+import { roleConstans as role } from 'src/auth/constants';
+import { ApiTags, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 
+@ApiBearerAuth() // Swagger 的 JWT 验证
+@ApiTags('user') // 添加 接口标签 装饰器
 @Controller('user')
 export class UserController {
   constructor(
@@ -31,7 +34,11 @@ export class UserController {
 
   // JWT验证 - Step 1: 用户请求登录
   @Post('login')
-  async login(@Body() loginParmas: any) {
+  @ApiBody({
+    description: '用户登录',
+    type: LoginDTO,
+  })
+  async login(@Body() loginParmas: LoginDTO) {
     console.log('JWT验证 - Step 1: 用户请求登录');
     const authResult = await this.authService.validateUser(
       loginParmas.user_name,
@@ -55,7 +62,8 @@ export class UserController {
   }
 
   @Get('users')
-  @UseInterceptors(new RbacInterceptor(2))
+  @UseGuards(new RbacGuard(role.DEVELOPER))
+  //@UseInterceptors(new RbacInterceptor(role.DEVELOPER))
   async getUsers(@Res() res) {
     // @Res是@Response的别名，目的是暴露底层响应对象的接口
     const users = await this.userService.getUsers();
@@ -86,9 +94,11 @@ export class UserController {
     });
   }
 
+  // Rbac应在Auth之前，否则无法获取用户信息
   @Put('/edit')
+  @UseGuards(new RbacGuard(role.DEVELOPER))
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(new RbacInterceptor(2))
+  // @UseInterceptors(new RbacInterceptor(role.DEVELOPER))
   async editUser(
     @Res() res,
     @Query('userID', new ValidateObjectId()) userID,
@@ -103,8 +113,9 @@ export class UserController {
   }
 
   @Delete('/delete')
+  @UseGuards(new RbacGuard(role.DEVELOPER))
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(new RbacInterceptor(2))
+  //@UseInterceptors(new RbacInterceptor(2))
   async deleteUser(
     @Res() res,
     @Query('userID', new ValidateObjectId()) userID,

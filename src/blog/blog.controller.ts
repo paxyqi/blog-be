@@ -18,7 +18,10 @@ import { CreatePostDTO } from './dto/create-post.dto';
 import { ValidateObjectId } from './shared/pipes/validate-object-id.pipes';
 import { RbacInterceptor } from '../interceptor/rbac.interceptor';
 import { AuthGuard } from '@nestjs/passport';
+import { roleConstans as role } from 'src/auth/constants';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('blog') // 添加 接口标签 装饰器
 @Controller('blog')
 export class BlogController {
   constructor(private blogService: BlogService) {}
@@ -66,7 +69,7 @@ export class BlogController {
 
   //接受 postID 的查询参数，并从数据库中删除特定的文章;若用户为等级为3的普通用户则不能删除文章
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(new RbacInterceptor(2))
+  @UseInterceptors(new RbacInterceptor(role.DEVELOPER))
   @Delete('/delete')
   async deletePost(
     @Res() res,
