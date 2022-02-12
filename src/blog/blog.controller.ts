@@ -10,10 +10,14 @@ import {
   Query,
   Put,
   Delete,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { CreatePostDTO } from './dto/create-post.dto';
 import { ValidateObjectId } from './shared/pipes/validate-object-id.pipes';
+import { RbacInterceptor } from '../interceptor/rbac.interceptor';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('blog')
 export class BlogController {
@@ -60,7 +64,9 @@ export class BlogController {
     });
   }
 
-  //接受 postID 的查询参数，并从数据库中删除特定的文章
+  //接受 postID 的查询参数，并从数据库中删除特定的文章;若用户为等级为3的普通用户则不能删除文章
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(new RbacInterceptor(2))
   @Delete('/delete')
   async deletePost(
     @Res() res,

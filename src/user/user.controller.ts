@@ -11,6 +11,7 @@ import {
   Put,
   Delete,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDTO } from './dto/create-user.dto';
@@ -18,6 +19,8 @@ import { ValidateObjectId } from '../pipes/validate-object-id.pipes';
 import { AuthService } from 'src/auth/auth.service';
 //添加用于验证用户token的守卫机制
 import { AuthGuard } from '@nestjs/passport';
+//用于用户分级，只有高等级用户可以执行注销账号和编辑账号操作
+import { RbacInterceptor } from '../interceptor/rbac.interceptor';
 
 @Controller('user')
 export class UserController {
@@ -52,6 +55,7 @@ export class UserController {
   }
 
   @Get('users')
+  @UseInterceptors(new RbacInterceptor(2))
   async getUsers(@Res() res) {
     // @Res是@Response的别名，目的是暴露底层响应对象的接口
     const users = await this.userService.getUsers();
@@ -73,7 +77,6 @@ export class UserController {
     return res.status(HttpStatus.OK).json(user);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Post('/post')
   async addUser(@Res() res, @Body() createUserDTO: CreateUserDTO) {
     const newUser = await this.userService.addUser(createUserDTO);
@@ -84,6 +87,8 @@ export class UserController {
   }
 
   @Put('/edit')
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(new RbacInterceptor(2))
   async editUser(
     @Res() res,
     @Query('userID', new ValidateObjectId()) userID,
@@ -98,6 +103,8 @@ export class UserController {
   }
 
   @Delete('/delete')
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(new RbacInterceptor(2))
   async deleteUser(
     @Res() res,
     @Query('userID', new ValidateObjectId()) userID,
