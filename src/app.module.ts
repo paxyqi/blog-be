@@ -17,7 +17,7 @@ import { AuthModule } from './auth/auth.module';
   //使用module装饰器将元数据附加到模块类中, mongoose中localhost/xxx中xxx为db名字
   imports: [
     UserModule,
-    MongooseModule.forRoot('mongodb://192.168.110.94/blog'),
+    MongooseModule.forRoot('mongodb://172.25.102.11/blog'),
     BlogModule,
     AuthModule,
   ],

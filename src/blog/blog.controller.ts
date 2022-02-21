@@ -43,6 +43,7 @@ export class BlogController {
 
   //添加新的文章
   @Post('/post')
+  // @UseGuards(AuthGuard('jwt')) 为了测试前端功能，临时注释
   async addPost(@Res() res, @Body() createPostDTO: CreatePostDTO) {
     const newPost = await this.blogService.addPost(createPostDTO);
     return res.status(HttpStatus.OK).json({
@@ -54,6 +55,7 @@ export class BlogController {
   //这个方法接受 postID 的查询参数，并执行更新一篇文章的功能。
   //ValidateObjectId 方法为您需要编辑文章提供适当的认证。
   @Put('/edit')
+  @UseGuards(AuthGuard('jwt'))
   async editPost(
     @Res() res,
     @Query('postID', new ValidateObjectId()) postID,
