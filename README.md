@@ -12,8 +12,10 @@ $ npm install
 
 ```bash
 # development
+$ sudo service mongodb start
+$ mongo-express
 $ npm run start
-*注意：需要先启动数据库，连接的数据库ip位于app.module.ts*
+# 注意：需要先启动数据库，连接的数据库ip位于app.module.ts
 
 # watch mode
 $ npm run start:dev
