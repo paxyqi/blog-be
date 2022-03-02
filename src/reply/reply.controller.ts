@@ -23,7 +23,7 @@ export class ReplyController {
     private commentService: CommentService,
   ) {}
 
-  @Post('/post')
+  @Post()
   async addReply(@Req() req, @Res() res, @Body() replyDTO: ReplyDTO) {
     const hasFromUser = await this.userService.getUser(req.body.fromUser);
     const hasToUser = await this.userService.getUser(req.body.toUser);
@@ -51,8 +51,8 @@ export class ReplyController {
     const replyLists = [];
     let i = 0;
     for (const item of data) {
-      console.log(item.userID);
-      const replyList = await this.replyService.getReplyList(item.userID);
+      console.log(item._id);
+      const replyList = await this.replyService.getReplyList(item._id);
       replyLists[i] = replyList;
       console.log(replyList);
       i++;
